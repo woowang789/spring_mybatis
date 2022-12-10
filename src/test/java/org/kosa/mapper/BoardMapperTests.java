@@ -1,8 +1,11 @@
 package org.kosa.mapper;
 
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kosa.domain.BoardVO;
+import org.kosa.domain.Criteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -21,6 +24,15 @@ public class BoardMapperTests {
 	@Test
 	public void testGetList() {
 		mapper.getList().forEach(b -> log.info(b));
+	}
+	
+	@Test
+	public void testPaging() {
+		Criteria cri  = new Criteria();
+		cri.setPageNum(100);
+		cri.setAmount(30);
+		List<BoardVO> list = mapper.getListWithPaging(cri);
+		list.forEach(l -> log.info(l));
 	}
 	
 	@Test

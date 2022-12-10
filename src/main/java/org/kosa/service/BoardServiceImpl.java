@@ -3,6 +3,7 @@ package org.kosa.service;
 import java.util.List;
 
 import org.kosa.domain.BoardVO;
+import org.kosa.domain.Criteria;
 import org.kosa.mapper.BoardMapper;
 import org.springframework.stereotype.Service;
 
@@ -36,10 +37,17 @@ public class BoardServiceImpl implements BoardService{
 	}
 
 	@Override
-	public List<BoardVO> getList() {
+	public List<BoardVO> getList(Criteria cri) {
 		
-		return mapper.getList();
+//		return mapper.getList();
+		return mapper.getListWithPaging(cri);
 	}
+
+	@Override
+	public int getTotal(Criteria cri) {
+		return mapper.getTotalCount(cri);
+	}
+	
 	
 	
 

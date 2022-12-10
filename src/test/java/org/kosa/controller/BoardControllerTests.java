@@ -36,8 +36,28 @@ public class BoardControllerTests {
 
 	@Test
 	public void testList() throws Exception {
-		ModelMap modelMap = mockMvc.perform(MockMvcRequestBuilders.get("/board/list")).andReturn().getModelAndView()
+		ModelMap modelMap = mockMvc.perform(MockMvcRequestBuilders.get("/board/list")
+				.param("pageNum", "3")
+				.param("amount","30")
+				).andReturn().getModelAndView()
 				.getModelMap();
 		log.info(modelMap);
 	}
+	
+	@Test
+	public void testGet() throws Exception{
+		ModelMap map =  mockMvc.perform(MockMvcRequestBuilders.get("/board/get").param("bno","22"))
+		.andReturn().getModelAndView().getModelMap();
+		
+		log.info(map);
+	}
+	
+	@Test
+	public void testRemove() throws Exception{
+		String viewName= mockMvc.perform(MockMvcRequestBuilders.post("/board/remove").param("bno", "24"))
+		.andReturn().getModelAndView().getViewName();
+		log.info(viewName);
+	}
+	
+	
 }
