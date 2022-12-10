@@ -48,11 +48,10 @@
 		<button data-oper="remove" type="submit" class="btn btn-default">Remove</button>
 		<button data-oper="list" type="submit" class="btn btn-default">List</button>
 
-		<input type="hidden" name="pageNum" readonly="readonly"
-			value="<c:out value="${cri.pageNum }" />" /> 
-			
-		<input type="hidden"name="amount" readonly="readonly"
-			value="<c:out value="${cri.amount }" />" />
+		<input type="hidden" name="pageNum" value="<c:out value="${cri.pageNum }" />" /> 
+		<input type="hidden"name="amount" value="<c:out value="${cri.amount }" />" />
+		<input type="hidden"name="keyword" value="<c:out value="${cri.keyword }" />" />
+		<input type="hidden"name="type" value="<c:out value="${cri.type }" />" />
 
 	</form>
 
@@ -72,14 +71,17 @@
 								if (oper == 'remove') {
 									formObj.attr('action', "/board/remove");
 								} else if (oper == 'list') {
-									formObj.attr("action", "/board/list").attr(
-											"method", "get");
+									formObj.attr("action", "/board/list").attr("method", "get");
 									let pageNumTag = $("input[name='pageNum']").clone();
 									let amountTag = $("input[name='amount']").clone();
+									let keywordTag = $("input[name='keyword']").clone();
+									let typeTag = $("input[name='type']").clone();
 									
 									formObj.empty();
 									formObj.append(pageNumTag);
 									formObj.append(amountTag);
+									formObj.append(keywordTag);
+									formObj.append(typeTag);
 									
 								}
 								formObj.submit();
