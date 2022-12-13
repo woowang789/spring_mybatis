@@ -19,8 +19,8 @@ span {
 
 	<%@include file="../includes/header.jsp"%>
 
-	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
-		aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+		 aria-hidden="true">
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -33,8 +33,8 @@ span {
 								type="text" class="form-control" id="reply" name="reply">
 						</div>
 						<div class="form-group">
-							<label for="replery" class="col-form-label">Replyer</label> <input
-								type="text" class="form-control" id="replyer" name="replery">
+							<label for="replyer" class="col-form-label">Replyer</label> <input
+								type="text" class="form-control" id="replyer" name="replyer">
 						</div>
 						<div class="form-group">
 							<label for="replyDate" class="col-form-label">ReplyDate</label> <input
@@ -82,7 +82,7 @@ span {
 	</div>
 
 	<button id='addReplyBtn' type="button" class="btn btn-primary"
-		data-toggle="modal" data-target="#exampleModal">New Reply</button>
+		data-toggle="modal">New Reply</button>
 	<button data-oper="modify" type="submit" class="btn btn-default">Modify</button>
 	<button data-oper="list" type="submit" class="btn btn-default">List</button>
 
@@ -98,16 +98,18 @@ span {
 			</li>
 		</ul>
 	</div>
+	
+	<div class="panel-footer">
+	
+	</div>
 
 
 	<form id="operForm" action="/board/modify" method="get">
-		<input type="hidden" id="bno" name="bno" readonly="readonly"
-			value="<c:out value="${board.bno }" />" /> <input type="hidden"
-			name="pageNum" value="<c:out value="${cri.pageNum }" />" /> <input
-			type="hidden" name="amount" value="<c:out value="${cri.amount }" />" />
-		<input type="hidden" name="keyword"
-			value="<c:out value="${cri.keyword }" />" /> <input type="hidden"
-			name="type" value="<c:out value="${cri.type }" />" />
+		<input type="hidden" id="bno" name="bno" readonly="readonly" value="<c:out value="${board.bno }" />" /> 
+		<input type="hidden" name="pageNum" value="<c:out value="${cri.pageNum }" />" /> 
+		<input type="hidden" name="amount" value="<c:out value="${cri.amount }" />" />
+		<input type="hidden" name="keyword" value="<c:out value="${cri.keyword }" />" /> 
+		<input type="hidden" name="type" value="<c:out value="${cri.type }" />" />
 	</form>
 
 
@@ -121,14 +123,12 @@ span {
 
 			$('button[data-oper="modify"]').click(function(e) {
 				operForm.attr("action", "/board/modify").submit();
-
 			});
 			$('button[data-oper="list"]').click(function(e) {
 				operForm.find("#bno").remove();
 				operForm.attr("action", "/board/list");
 				operForm.submit();
 			});
-
 			
 			let bnoValue = '<c:out value="${board.bno}" />';
 			let replyUL = $('.chat')
@@ -145,7 +145,16 @@ span {
 			`
 			
 			function showList(page){
-				replyService.getList({bno:bnoValue,page:page||1}, function(list){
+				replyService.getList({bno:bnoValue,page:page||1}, function(replyCnt, list){
+					console.log(replyCnt);
+					console.log(list);
+					
+					if(page == -1){
+						pageNum = Math.ceil(replyCnt/10.0);
+						showList(pageNum);
+						return;
+					}
+					
 					let str = '';
 					if(list == null || list.length == 0) {
 						replyUL.html("");
@@ -158,8 +167,11 @@ span {
 							.replace('{reply}',list[i].reply);
 					}
 					replyUL.html(str);
+					showReplyPage(replyCnt);
 				})
 			}
+			
+			/* reply modal */
 			
 			let modal = $('.modal');
 			let modalInputReply = modal.find('input[name="reply"]')
@@ -168,49 +180,128 @@ span {
 			
 			let modalModBtn = $('#modalModBtn');
 			let modalRemoveBtn = $('#modalRemoveBtn');
-			let modalRegisterBtn = ${'#modalCreateBtn'}
-		});
-	/* 	
-		console.log(replyService)
-		let bnoValue = '<c:out value="${board.bno}" />';
-		replyService.add({
-			reply : "JS Test",
-			replyer : "tester",
-			bno : bnoValue
-		}, function(result) {
-			alert("Result :" + result);
-		});
-		
-		replyService.getList({bno:bnoValue, page:1}, function(list){
-			for(let i=0; len = list.length||0, i < len; i++){
-				console.log(list[i]);
-			}
-		})
-		
-		replyService.remove(13, 
-			function(count){
-				console.log(count);
+			let modalRegisterBtn = $('#modalCreateBtn');
+			
+			/* reply paging */
+			let pageNum = 1;
+			let replyPageFooter = $('.panel-footer');
+			
+			$('#addReplyBtn').click(function(e){
+				modal.find('input').val('');
+				modalInputReplyDate.closest('div').hide();
+				modal.find('button[id!="modalCloseBtn"]').hide();
 				
-				if(count == 'success') alert('removed');
-		}, 
-			function(err){
-				alert('error');
+				modalRegisterBtn.show();
+				
+				modal.modal("show");
+				
+			})
+			
+			modalRegisterBtn.click(function(e){
+				let reply = {
+						reply : modalInputReply.val(),
+						replyer : modalInputReplyer.val(),
+						bno : bnoValue
+				};
+				replyService.add(reply, function(result){
+					alert(result);
+					
+					modal.find('input').val('');
+					modal.modal('hide');
+					
+					showList(-1);
+				})
+			})
+			
+			$('.chat').on('click','li',function(e){
+				let rno = $(this).data('rno');
+				
+				replyService.get(rno, function(reply){
+					modalInputReply.val(reply.reply);
+					modalInputReplyer.val(reply.replyer);
+					modalInputReplyDate.val(replyService.displayTime(reply.replyDate)).attr('readonly','readonly');
+					modal.data('rno', reply.rno);
+					
+					modal.find('button[id!="modalCloseBtn"]').hide();
+					modalModBtn.show();
+					modalRemoveBtn.show();
+					
+					modal.modal('show');
+				})
+			})
+			
+			modalModBtn.click(function(e){
+				let reply = {rno : modal.data('rno'), reply:modalInputReply.val()};
+				replyService.update(reply, function(result){
+					alert(result);
+					modal.modal('hide');
+					showList(pageNum);
+				})
+			})
+			
+			modalRemoveBtn.click(function(e){
+				let rno = modal.data('rno');
+				replyService.remove(rno, function(result){
+					alert(result);
+					modal.modal('hide');
+					showList(pageNum);
+				})
+			})
+			
+			function showReplyPage(replyCnt){
+				let endNum = Math.ceil(pageNum / 10.0) * 10;
+				let startNum = endNum - 9;
+				
+				let prev = startNum != 1;
+				let next = false;
+				
+				if(endNum * 10 >= replyCnt){
+					endNum = Math.ceil(replyCnt/10.0);
+				}
+				if(endNum * 10 < replyCnt){
+					next = true;
+				}
+				
+				let str = `<ul class='pagination pull-right'>`;
+				
+				let prevUL = `
+					<li class='page-item'>
+						<a class='page-link' href='{num}'>Previous</a>
+					</li>`;
+				let nextUL = `
+					<li class='page-item'>
+					<a class='page-link' href='{num}'>Next</a>
+				</li>`;
+				let numUL = `
+					<li class='page-item {active}'>
+						<a class='page-link' href='{num}'>{num}</a>
+					</li>
+				`;
+				
+				if(prev) str+= prevUL.replace('{num}', startNum-1);
+				
+				for(let i=startNum; i<= endNum; i++){
+					let active = pageNum == i? "active":"";
+					str+= numUL.replaceAll('{num}', i).replace('{active}',active);
+				}
+				if(next) str += nextUL.replace('{num}', endNum+1);
+				str += "</ul>"
+				
+				console.log(str);
+				replyPageFooter.html(str);
 			}
-		)
-		
-		replyService.update({
-			rno:14,
-			bno: bnoValue,
-			reply : "Modify Reply ... "
-		}, function(result){
-			alert('수정 완료..')
+			
+			replyPageFooter.on('click','li a',function(e){
+				e.preventDefault();
+				console.log('page click');
+				
+				let targetPageNum = $(this).attr('href');
+				console.log('targetPageNum : '+ targetPageNum);
+				pageNum = targetPageNum;
+				
+				showList(pageNum);
+			})
 		})
-		
-		replyService.get(18, function(data){
-			console.log('ttt');
-			console.log(data);
-		}) 
-		*/
 	</script>
 </body>
 </html>

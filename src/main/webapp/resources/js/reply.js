@@ -29,7 +29,7 @@ const replyService = (function(){
 		
 		$.getJSON("/replies/pages/"+bno+"/"+page,
 		function(data){
-			if(callback) callback(data);
+			if(callback) callback(data.replyCnt, data.list);
 		}).fail(function(xhr, status, err){
 			if(error) error();
 		});
@@ -58,7 +58,7 @@ const replyService = (function(){
 			data : JSON.stringify(reply),
 			contentType : 'application/json; charset=utf-8',
 			success : function(result, status, xhr){
-				if(callback) callback();
+				if(callback) callback(result);
 			},
 			error : function(xhr, status, er){
 				if(error) error(er);
@@ -102,8 +102,7 @@ const replyService = (function(){
 			if( mm < 10 ) mm = '0' + mm;
 			if( dd < 10 ) dd = '0' + dd;
 			
-			return yy+'/'+mm+'/'+dd
-		
+			return yy+'/'+mm+'/'+dd;
 		}
 	}
 		

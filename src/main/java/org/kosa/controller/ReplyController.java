@@ -2,9 +2,9 @@ package org.kosa.controller;
 
 import java.util.List;
 
-import javax.websocket.server.PathParam;
 
 import org.kosa.domain.Criteria;
+import org.kosa.domain.ReplyPageDTO;
 import org.kosa.domain.ReplyVO;
 import org.kosa.service.ReplyService;
 import org.springframework.http.HttpStatus;
@@ -34,6 +34,7 @@ public class ReplyController {
 			MediaType.TEXT_PLAIN_VALUE })
 	public ResponseEntity<String> create(@RequestBody ReplyVO vo) {
 		log.info("new reply");
+		log.info("new reply : "+ vo);
 		int insertCount = service.register(vo);
 
 		return insertCount == 1 ? new ResponseEntity<>("success", HttpStatus.OK)
@@ -41,12 +42,12 @@ public class ReplyController {
 	}
 
 	@GetMapping(value = "/pages/{bno}/{page}", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<List<ReplyVO>> getList(@PathVariable("page") int page, @PathVariable("bno") Long bno) {
+	public ResponseEntity<ReplyPageDTO> getList(@PathVariable("page") int page, @PathVariable("bno") Long bno) {
 		log.info("getList ...");
 		Criteria cri = new Criteria(page, 10);
 
 		log.info(cri);
-		return new ResponseEntity<>(service.getList(cri, bno), HttpStatus.OK);
+		return new ResponseEntity<>(service.getListPage(cri, bno), HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/{rno}", produces = { MediaType.APPLICATION_JSON_VALUE })
@@ -68,5 +69,4 @@ public class ReplyController {
 		return service.modify(vo) == 1 ? new ResponseEntity<>("success", HttpStatus.OK)
 				: new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
-
 }
