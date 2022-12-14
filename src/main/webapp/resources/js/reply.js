@@ -97,7 +97,7 @@ const replyService = (function(){
 		}else{
 			let yy = dateObj.getFullYear();
 			let mm = dateObj.getMonth() + 1;
-			let dd = dataObj.getDate();
+			let dd = dateObj.getDate();
 			
 			if( mm < 10 ) mm = '0' + mm;
 			if( dd < 10 ) dd = '0' + dd;
