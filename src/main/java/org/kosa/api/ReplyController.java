@@ -1,7 +1,4 @@
-package org.kosa.controller;
-
-import java.util.List;
-
+package org.kosa.api;
 
 import org.kosa.domain.Criteria;
 import org.kosa.domain.ReplyPageDTO;

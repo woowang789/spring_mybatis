@@ -202,8 +202,15 @@
 			<artifactId>lombok</artifactId>
 			<version>1.18.24</version>
 			<scope>provided</scope>
-
 		</dependency>
+
+		<!-- thumbnail -->
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.18</version>
+		</dependency>
+
 
 	</dependencies>
 	<build>

@@ -19,8 +19,17 @@ span {
 
 	<%@include file="../includes/header.jsp"%>
 
-	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-		 aria-hidden="true">
+	<div class='bigPictureWrapper'>
+		<div class='bigPicture'></div>
+	</div>
+	<style>
+		.bigPictureWrapper{
+			position : absolute;
+		}
+	</style>
+
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+		aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -87,29 +96,31 @@ span {
 	<button data-oper="list" type="submit" class="btn btn-default">List</button>
 
 	<div>
+		<h3>Files</h3>
+		<div class="uploadResult">
+			<ul>
+			</ul>
+		</div>		
+	</div>
+
+	<div>
 		<h3>Replies</h3>
 		<ul class="chat">
-			<li class="left clearifx" data-rno="12">
-				<div class="header">
-					<strong class="primary-font">user00</strong> <small
-						class="pull-right text-muted">2018-01-01 13:13</small>
-				</div>
-				<p>Good job!</p>
-			</li>
 		</ul>
 	</div>
-	
-	<div class="panel-footer">
-	
-	</div>
+
+
+	<div class="panel-footer"></div>
 
 
 	<form id="operForm" action="/board/modify" method="get">
-		<input type="hidden" id="bno" name="bno" readonly="readonly" value="<c:out value="${board.bno }" />" /> 
-		<input type="hidden" name="pageNum" value="<c:out value="${cri.pageNum }" />" /> 
-		<input type="hidden" name="amount" value="<c:out value="${cri.amount }" />" />
-		<input type="hidden" name="keyword" value="<c:out value="${cri.keyword }" />" /> 
-		<input type="hidden" name="type" value="<c:out value="${cri.type }" />" />
+		<input type="hidden" id="bno" name="bno" readonly="readonly"
+			value="<c:out value="${board.bno }" />" /> <input type="hidden"
+			name="pageNum" value="<c:out value="${cri.pageNum }" />" /> <input
+			type="hidden" name="amount" value="<c:out value="${cri.amount }" />" />
+		<input type="hidden" name="keyword"
+			value="<c:out value="${cri.keyword }" />" /> <input type="hidden"
+			name="type" value="<c:out value="${cri.type }" />" />
 	</form>
 
 
@@ -119,6 +130,61 @@ span {
 
 	<script type="text/javascript">
 		$(document).ready(function() {
+			let bno = '<c:out value="${board.bno}" />';
+			$.getJSON('/api/getAttachList',{bno:bno},function(arr){
+				console.log(arr);
+				
+				let str= '';
+				$(arr).each(function(i, attach){
+					if(attach.fileType){
+						let fileCallPath = 
+							encodeURIComponent(attach.uploadPath + "/s_"+attach.uuid+"_"+attach.fileName);
+						console.log(fileCallPath);
+						let template = `
+							<li data-path='{uploadPath}' data-uuid='{uuid}' data-filename='{filename}' data-type='{type}'>
+								<div>
+									<img src='/api/display?fileName={fileCallPath}'>
+								</div>
+							</li>`
+							.replace('{uploadPath}',attach.uploadPath)
+							.replace('{uuid}',attach.uuid)
+							.replace('{filename}',attach.fileName)
+							.replace('{type}',attach.fileType)
+							.replace('{fileCallPath}',fileCallPath);
+							console.log(template);
+						str+= template;
+					}
+				})
+				$('.uploadResult ul').html(str);
+			});
+			
+			$('.uploadResult').on('click','li',function(e){
+				console.log('view image');
+				
+				let liObj = $(this);
+				
+				let path = 
+					encodeURIComponent(liObj.data('path')+'/'+liObj.data('uuid')+'_'+liObj.data('filename'));
+				
+				if(liObj.data('type')) showImage(path.replace(new RegExp(/\\/g),"/"));
+			});
+			
+			function showImage(fileCallPath){
+				alert(fileCallPath);
+				$('.bigPictureWrapper').css('display','flex').show();
+				
+				let template = `<img src='/api/display?fileName={fileCallPath}'>`
+						.replace('{fileCallPath}',fileCallPath);
+				$(".bigPicture").html(template).animate({width:'100%', height:'100%'}, 1000);
+			}
+			$('.bigPictureWrapper').click(function(e){
+				$('.bigPicture').animate({width:'0%', height:'0%'},1000);
+				setTimeout(function(){
+					$('.bigPictureWrapper').hide();
+				},1000);
+			});
+			
+			
 			let operForm = $("#operForm");
 
 			$('button[data-oper="modify"]').click(function(e) {

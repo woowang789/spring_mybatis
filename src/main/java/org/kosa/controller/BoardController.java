@@ -1,7 +1,12 @@
 package org.kosa.controller;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import org.kosa.domain.BoardAttachVO;
 import org.kosa.domain.BoardVO;
 import org.kosa.domain.Criteria;
 import org.kosa.domain.PageDTO;
@@ -23,6 +28,7 @@ import lombok.extern.log4j.Log4j;
 @RequiredArgsConstructor
 @Log4j
 public class BoardController {
+	private String uploadFolder = "C:\\Users\\KOSA\\Desktop\\images";
 
 	private final BoardService service;
 
@@ -44,6 +50,9 @@ public class BoardController {
 	@PostMapping("/register")
 	public String register(BoardVO board, RedirectAttributes rttr) {
 		log.info("register :" + board);
+		if (board.getAttachList() != null) {
+			board.getAttachList().forEach(attach -> log.info(attach));
+		}
 		service.register(board);
 		rttr.addFlashAttribute("result", board.getBno());
 		return "redirect:/board/list";
@@ -72,12 +81,16 @@ public class BoardController {
 //		rttr.addAttribute("type", cri.getType());
 //		rttr.addAttribute("keyword", cri.getKeyword());
 //		return "redirect:/board/list";
-		return "redirect:/board/list"+cri.getListLink();
+		return "redirect:/board/list" + cri.getListLink();
 	}
 
 	@PostMapping("/remove")
-	public String remove(@RequestParam("bno") Long bno, @ModelAttribute("cri") Criteria cri,RedirectAttributes rttr) {
+	public String remove(@RequestParam("bno") Long bno, @ModelAttribute("cri") Criteria cri, RedirectAttributes rttr) {
+		
+		List<BoardAttachVO> attachList = service.getAttachList(bno);
+		
 		if (service.remove(bno)) {
+			deleteFiles(attachList);
 			rttr.addFlashAttribute("remove", "success");
 		}
 //		rttr.addAttribute("pageNum", cri.getPageNum());
@@ -85,7 +98,33 @@ public class BoardController {
 //		rttr.addAttribute("type", cri.getType());
 //		rttr.addAttribute("keyword", cri.getKeyword());
 //		return "redirect:/board/list";
-		return "redirect:/board/list"+cri.getListLink();
+		return "redirect:/board/list" + cri.getListLink();
+	}
+
+	private void deleteFiles(List<BoardAttachVO> attachList) {
+		if (attachList == null || attachList.size() == 0)
+			return;
+
+		log.info("delete attach Files...");
+		log.info(attachList);
+
+		attachList.forEach(attach -> {
+			try {
+				Path file = Paths.get(uploadFolder + File.separator + attach.getUploadPath() + File.separator
+						+ attach.getUuid() + "_" + attach.getFileName());
+				Files.deleteIfExists(file);
+
+				if (Files.probeContentType(file).startsWith("image")) {
+					Path thumbNail = Paths.get(uploadFolder + File.separator + attach.getUploadPath() + File.separator
+							+ "s_" + attach.getUuid() + "_" + attach.getFileName());
+
+					Files.delete(thumbNail);
+				}
+			} catch (Exception e) {
+				log.error("delete file error " + e.getMessage());
+			}
+		});
+
 	}
 
 }

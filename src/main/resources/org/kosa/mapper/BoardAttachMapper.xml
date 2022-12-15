@@ -14,4 +14,8 @@
 	<select id="findByBno" resultType="org.kosa.domain.BoardAttachVO">
 		select * from tbl_attach where bno = #{bno}
 	</select>
+	
+	<delete id="deleteAll">
+		delete tbl_attach where bno = #{bno}
+	</delete>
 </mapper>
