@@ -11,6 +11,7 @@ import org.kosa.domain.BoardVO;
 import org.kosa.domain.Criteria;
 import org.kosa.domain.PageDTO;
 import org.kosa.service.BoardService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +29,9 @@ import lombok.extern.log4j.Log4j;
 @RequiredArgsConstructor
 @Log4j
 public class BoardController {
-	private String uploadFolder = "C:\\Users\\KOSA\\Desktop\\images";
-
+//	private String uploadFolder = "C:\\Users\\KOSA\\Desktop\\images";
+	@Value("#{filepath['file.path']}")
+	private String uploadFolder;
 	private final BoardService service;
 
 	@GetMapping("/list")
@@ -124,7 +126,7 @@ public class BoardController {
 				log.error("delete file error " + e.getMessage());
 			}
 		});
-
+		// TODO : 파일이 로컬에서 삭제가 안되는 버그...아마 deleteFiles 메서드 문젠듯
 	}
 
 }

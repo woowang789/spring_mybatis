@@ -74,6 +74,7 @@
 		$(document).ready(function(){
 			let bno = '<c:out value="${board.bno}" />';
 			let formObj = $('form');
+			const uploadUL = $(".uploadResult ul");
 			
 				(function(){
 					
@@ -112,6 +113,69 @@
 						targetLi.remove();
 					}
 				})
+				
+				const regex = new RegExp("(.*?)\.(exe|sh|zip|alz)$");
+				const maxSize = 5242880;
+				
+				function checkExtension(fileName, fileSize){
+					if(fileSize >= maxSize){
+						alert("파일 사이즈 초과");
+						return false;
+					}
+					
+					if(regex.test(fileName)){
+						alert("해당 종류의 파일은 업로드 할 수 없습니다.")
+						return false;
+					}
+					return true;
+				}
+				
+				function showUploadedFile(uploadResultArr){
+					let str = "";
+					$(uploadResultArr).each(function(i, obj){
+						if(!obj.image){
+							// 이미지가 아니면 .. 
+						}else{
+							let fileCallPath = encodeURIComponent(
+									obj.uploadPath + "/s_"+obj.uuid+"_"+obj.fileName);
+							str += 
+							`<li data-path='{uploadPath}' data-uuid='{uuid}' data-filename='{filename}' data-type='{type}'>
+								<img src='/api/display?fileName={fileCallPath}'>
+								<button type="button" data-type="image" data-file='{fileCallPath}'>삭제</button>		
+							</li>`
+								.replaceAll('{fileCallPath}',fileCallPath)
+								.replace('{uploadPath}', obj.uploadPath)
+								.replace('{uuid}',obj.uuid)
+								.replace('{type}',obj.image)
+								.replace('{filename}',obj.fileName)
+							;
+						}
+					});
+					uploadUL.append(str);
+				}
+				
+			$("input[type='file']").change(function(e){
+			let formData = new FormData();
+			let inputFile = $("input[name='uploadFile']");
+			let files = inputFile[0].files;
+			for(let i=0;i<files.length;i++){
+				if(!checkExtension(files[i].name, files[i].size)) return false;
+				formData.append("uploadFile",files[i]);
+			}
+			
+			$.ajax({
+				url: '/api/uploadAjaxAction',
+				processData:false,
+				contentType : false,
+				data : formData,
+				type: 'POST',
+				dataType : 'json',
+				success : function(result){
+					console.log(result);
+					showUploadedFile(result);
+				}
+			});
+		});
 					$('button').click(
 							function(e) {
 								e.preventDefault();

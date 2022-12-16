@@ -4,15 +4,22 @@
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
 	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
-		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
 	<!-- context:property-placeholder location="classpath:database.properties" 
 		/! -->
 	<context:property-placeholder
 		location="classpath:config/database.properties" />
+	<util:properties id="filepath"
+		location="classpath:/config/filepath.properties">
+	</util:properties>
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
 	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
@@ -40,10 +47,14 @@
 
 	<context:component-scan
 		base-package="org.kosa.service"></context:component-scan>
-		
+
+	<context:component-scan
+		base-package="org.kosa.task"></context:component-scan>
+
 	<mybatis-spring:scan base-package="org.kosa.mapper" />
 
 	<context:annotation-config></context:annotation-config>
 	<tx:annotation-driven />
+	<task:annotation-driven />
 
 </beans>
