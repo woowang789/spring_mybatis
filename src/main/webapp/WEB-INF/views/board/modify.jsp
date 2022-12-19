@@ -1,5 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec"
+	uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,6 +14,7 @@
 	<%@include file="../includes/header.jsp"%>
 	<h1>게시글 수정</h1>
 	<form action="/board/modify" method="post">
+		<input type='hidden' name="${_csrf.parameterName }" value="${_csrf.token }">
 		<div class="form-group">
 			<label for="bno">Num</label> <input type="text" class="form-control"
 				readonly="readonly" id="bno" name="bno"
@@ -54,9 +58,15 @@
 				</ul>
 			</div>
 		</div>
-
-		<button data-oper="modify" type="submit" class="btn btn-default">Modify</button>
-		<button data-oper="remove" type="submit" class="btn btn-default">Remove</button>
+		<sec:authentication property="principal" var="pinfo" />
+		<sec:authorize access="isAuthenticated()">
+			<c:if test="${pinfo.username eq board.writer }">
+				<button data-oper="modify" type="submit" class="btn btn-default">Modify</button>
+				<button data-oper="remove" type="submit" class="btn btn-default">Remove</button>	
+			</c:if>
+		</sec:authorize>
+		
+		
 		<button data-oper="list" type="submit" class="btn btn-default">List</button>
 
 		<input type="hidden" name="pageNum"

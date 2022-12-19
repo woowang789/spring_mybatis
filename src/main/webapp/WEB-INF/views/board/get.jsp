@@ -1,5 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec"
+	uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,10 +26,10 @@ span {
 		<div class='bigPicture'></div>
 	</div>
 	<style>
-		.bigPictureWrapper{
-			position : absolute;
-		}
-	</style>
+.bigPictureWrapper {
+	position: absolute;
+}
+</style>
 
 	<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
 		aria-labelledby="myModalLabel" aria-hidden="true">
@@ -90,9 +93,15 @@ span {
 		<fmt:formatDate pattern="yyyy-MM-dd" value="${board.updateDate }" />
 	</div>
 
-	<button id='addReplyBtn' type="button" class="btn btn-primary"
-		data-toggle="modal">New Reply</button>
-	<button data-oper="modify" type="submit" class="btn btn-default">Modify</button>
+	<sec:authentication property="principal" var="pinfo" />
+	<sec:authorize access="isAuthenticated()">
+		<button id='addReplyBtn' type="button" class="btn btn-primary"
+			data-toggle="modal">New Reply</button>
+			
+		<c:if test="${pinfo.username eq board.writer }">
+			<button data-oper="modify" type="submit" class="btn btn-default">Modify</button>
+		</c:if>
+	</sec:authorize>
 	<button data-oper="list" type="submit" class="btn btn-default">List</button>
 
 	<div>
@@ -100,7 +109,7 @@ span {
 		<div class="uploadResult">
 			<ul>
 			</ul>
-		</div>		
+		</div>
 	</div>
 
 	<div>
@@ -131,6 +140,15 @@ span {
 	<script type="text/javascript">
 		$(document).ready(function() {
 			let bno = '<c:out value="${board.bno}" />';
+			
+			let replyer = null;
+			<sec:authorize access="isAuthenticated()">
+			replyer = '<sec:authentication property="principal.username"/>';
+			</sec:authorize>
+			console.log('replyer : ',replyer);
+			const csrfHeaderName = "${_csrf.headerName}";
+			const csrfTokenValue = "${_csrf.token}";
+			
 			$.getJSON('/api/getAttachList',{bno:bno},function(arr){
 				console.log(arr);
 				
@@ -254,6 +272,7 @@ span {
 			
 			$('#addReplyBtn').click(function(e){
 				modal.find('input').val('');
+				modal.find("input[name='replyer']").val(replyer);
 				modalInputReplyDate.closest('div').hide();
 				modal.find('button[id!="modalCloseBtn"]').hide();
 				
@@ -261,6 +280,9 @@ span {
 				
 				modal.modal("show");
 				
+			})
+			$(document).ajaxSend(function(e,xhr,options){
+				xhr.setRequestHeader(csrfHeaderName, csrfTokenValue);
 			})
 			
 			modalRegisterBtn.click(function(e){
@@ -297,7 +319,23 @@ span {
 			})
 			
 			modalModBtn.click(function(e){
-				let reply = {rno : modal.data('rno'), reply:modalInputReply.val()};
+				
+				let originalReplyer = modalInputReplyer.val();
+				let reply = {
+						rno : modal.data('rno'), 
+						reply:modalInputReply.val(),
+						replyer: originalReplyer
+						};
+				if(!replyer){
+					alert("로그인 후 수정이 가능합니다.");
+					modal.modal("hide");
+					return;
+				}
+				if(replyer != originalReplyer){
+					alert("작성자만 수정 가능합니다.");
+					modal.modal("hide");
+					return;
+				}
 				replyService.update(reply, function(result){
 					alert(result);
 					modal.modal('hide');
@@ -307,7 +345,20 @@ span {
 			
 			modalRemoveBtn.click(function(e){
 				let rno = modal.data('rno');
-				replyService.remove(rno, function(result){
+				
+				if(!replyer){
+					alert("로그인 후 삭제가 가능합니다.")
+					modal.modal('hide');
+					return;
+				}
+				let originReplyer = modalInputReplyer.val();
+				if(replyer != originReplyer){
+					alert("작성자만 삭제가 가능합니다.");
+					modal.modal('hide');
+					return;
+				}
+				
+				replyService.remove(rno,originReplyer, function(result){
 					alert(result);
 					modal.modal('hide');
 					showList(pageNum);

@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec"
+	uri="http://www.springframework.org/security/tags"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,6 +13,8 @@
 	<%@include file="../includes/header.jsp"%>
 	<h1>게시글 등록</h1>
 	<form role='form' action="/board/register" method="post">
+		<input type='hidden' name="${_csrf.parameterName }" value="${_csrf.token }">
+	
 		<div class="form-group">
 			<label for="title">Title</label> <input type="text"
 				class="form-control" id="title" name="title">
@@ -20,8 +24,9 @@
 			<textarea class="form-control" id="content" name='content' rows="3"></textarea>
 		</div>
 		<div class="form-group">
-			<label for="writer">Writer</label> <input type="text"
-				class="form-control" id="writer" name="writer">
+			<label for="writer">Writer</label> 
+			<input type="text" class="form-control" id="writer" name="writer" 
+				value="<sec:authentication property='principal.username'/>" readonly='readonly'>
 		</div>
 		<div class="form-group">
 			<label for="uploadFile">uplaodFile</label> <input type="file"
@@ -42,6 +47,8 @@
 	
 	<script>
 	$(document).ready(function(){
+		let csrfHeaderName="${_csrf.headerName}";
+		let csrfTokenValue="${_csrf.token}";
 		const formObj = $("form[role='form']");
 		const uploadUL = $(".uploadResult ul");
 		$('button[type="submit"]').click(function(e){
@@ -148,6 +155,9 @@
 				url: '/api/uploadAjaxAction',
 				processData:false,
 				contentType : false,
+				beforeSend: function(xhr){
+					xhr.setRequestHeader(csrfHeaderName, csrfTokenValue);
+				},
 				data : formData,
 				type: 'POST',
 				dataType : 'json',

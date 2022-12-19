@@ -14,9 +14,11 @@ import java.util.UUID;
 import org.kosa.domain.AttachFileDTO;
 import org.kosa.domain.BoardAttachVO;
 import org.kosa.service.BoardService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,10 +37,12 @@ import net.coobird.thumbnailator.Thumbnailator;
 @RequiredArgsConstructor
 public class BoardAttachController {
 
-	private String uploadFolder = "C:\\Users\\KOSA\\Desktop\\images";
-	
+	@Value("#{filepath['file.path']}")
+	private String uploadFolder;
+
 	private final BoardService service;
 
+	@PreAuthorize("isAuthenticated()")
 	@PostMapping("/uploadAjaxAction")
 	public ResponseEntity<List<AttachFileDTO>> uploadAjaxAction(MultipartFile[] uploadFile) {
 		List<AttachFileDTO> list = new ArrayList<>();
@@ -68,7 +72,7 @@ public class BoardAttachController {
 				multipartFile.transferTo(saveFile);
 				if (checkImageType(saveFile)) {
 					attachDTO.setImage(true);
-					FileOutputStream thumbnail = new FileOutputStream(new File(uploadPath,"s_" + uploadFileName));
+					FileOutputStream thumbnail = new FileOutputStream(new File(uploadPath, "s_" + uploadFileName));
 					Thumbnailator.createThumbnail(multipartFile.getInputStream(), thumbnail, 100, 100);
 					thumbnail.close();
 					log.info("thumbFile comp ------------------");
@@ -89,8 +93,8 @@ public class BoardAttachController {
 	@GetMapping("/display")
 	public ResponseEntity<byte[]> getFile(String fileName) {
 		log.info("fileName : " + fileName);
-		File file = new File(uploadFolder , fileName);
-		
+		File file = new File(uploadFolder, fileName);
+
 		log.info("file : " + file);
 		ResponseEntity<byte[]> result = null;
 
@@ -103,32 +107,32 @@ public class BoardAttachController {
 		}
 		return result;
 	}
-	
+
 	@PostMapping("/deleteFile")
-	public ResponseEntity<String> deleteFile(String fileName, String type){
-		log.info("deleteFile : "+ fileName);
-		
+	public ResponseEntity<String> deleteFile(String fileName, String type) {
+		log.info("deleteFile : " + fileName);
+
 		File file = null;
 		try {
-			file = new File(uploadFolder, URLDecoder.decode(fileName,"UTF-8"));
+			file = new File(uploadFolder, URLDecoder.decode(fileName, "UTF-8"));
 			file.delete();
-			if(type.equals("image")) {
+			if (type.equals("image")) {
 				String largeFileName = file.getAbsolutePath().replace("s_", "");
-				log.info("largetFileName : "+largeFileName);
+				log.info("largetFileName : " + largeFileName);
 				file = new File(largeFileName);
 				file.delete();
-			}	
-		}catch(Exception e) {
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 		return new ResponseEntity<>("deleted", HttpStatus.OK);
 	}
-	
-	@GetMapping(value="/getAttachList")
-	public ResponseEntity<List<BoardAttachVO>> getAttachList(Long bno){
+
+	@GetMapping(value = "/getAttachList")
+	public ResponseEntity<List<BoardAttachVO>> getAttachList(Long bno) {
 		log.info("getAttachList " + bno);
-		return new ResponseEntity<>(service.getAttachList(bno),HttpStatus.OK);
+		return new ResponseEntity<>(service.getAttachList(bno), HttpStatus.OK);
 	}
 
 	private String getFoler() {
